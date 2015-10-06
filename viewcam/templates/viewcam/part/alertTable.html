@@ -1,0 +1,738 @@
+<script>
+    //Update for alarmTime
+    function updateAlarmTime(dev, timer) {
+        var url = "ajax/alarmtime/@dev/@timer";
+        url = url.replace('@dev', dev).replace('@timer', timer);
+
+        var alarm_request = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        alarm_request.done(function (data) {
+            var result = JSON.parse(data.content);
+            //console.log(result)
+
+            //Get id html of view for device
+            var value = 'dev@dev_timer@timer_@field'.replace('@dev', result['dev']).replace('@timer', result['timer']);
+            var id_action = value.replace('@field', 'action');
+            var id_countdown = value.replace('@field', 'countdown');
+
+
+            //If set alarm Time success
+            if (result['status']) {
+
+                //Change view
+                var action = changeActionView(result['action']);
+
+                //Change html value
+                changeValue(id_action, action);
+                changeValue(id_countdown, result['remain']);
+
+            } else {
+                //Change html to none
+                changeValue(id_action, '');
+                changeValue(id_countdown, '');
+            }
+        });
+    }
+
+
+
+    //Check exist to show alert and send request to server
+    //Action to show type alert. Overwrite or new alarm.
+    //dev, timer to specified alarm to update view when complete
+    function checkExistAndPerformByTime(url, action, dev, timer) {
+        //Check overwrite to alarm
+        var url_check = 'alarmtime/@dev/@timer'.replace('@dev', dev).replace('@timer', timer);
+        var requestAlarm = $.ajax({
+            url: url_check,
+            type: 'GET'
+        });
+
+        //Check status of request from server
+        requestAlarm.done(function (data) {
+            var result = JSON.parse(data.content);
+            console.log(result)
+
+            //Set alarm success
+            if (result['status']) {
+                //Update alarmTime, set action, countdown
+                var ret = false;
+
+                //Is action remove
+                if (action == 'remove') {
+                    ret = confirmAction('Do you want Remove this Alarm?');
+                } else {
+                    ret = confirmAction('Do you want Update this Alarm?');
+                }
+
+                //console.log(ret)
+                if (!ret) {
+                    return;
+                } else {
+                    setAlarmTime(url, dev, timer);
+                }
+
+            } else {
+                //Perform action
+                setAlarmTime(url, dev, timer);
+            }
+        });
+    }
+
+
+    //Send request to server
+    function setAlarmTime(url, dev, timer) {
+        console.log(url);
+        //Send request to server
+        var requestAlarm = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        //Check status of request from server
+        requestAlarm.done(function (data) {
+            var result = JSON.parse(data.content);
+
+            //Set alarm success
+            if (result['status']) {
+                //Update alarm time, set action, countdown
+                updateAlarmTime(dev, timer);
+                alert('Alarm have just performed successful')
+            } else {
+                alert('Please check information input. Operation is not successful');
+            }
+        });
+    }
+
+
+    //Main set alarm for three type alarm
+    function setAlarm(frm) {
+        //Get input data
+        var dev = document.getElementById('alarmDevice').value;
+
+        if (dev == '') {
+            alert("Please select device for alarm action");
+            return;
+        }
+
+        //Get alarm type.
+        var alarmType = document.getElementById('alarmType').value;
+
+
+        if (alarmType == '') {
+            alert('Please choice type alarm');
+            return;
+        }
+
+        var action = document.getElementById('alarmAction').value;
+        if (action == '') {
+            alert('Please choice action for alarm')
+            return;
+        }
+
+
+        if (alarmType == 'alarmByTime') {
+            setAlarmByTime(dev, action);
+            return;
+        }
+
+        if (alarmType == 'alarmByMin') {
+            setAlarmByMinute(dev, action);
+            return;
+        }
+
+        if (alarmType == 'alarmByTemp') {
+            setAlarmByTemp(dev, action);
+            return;
+        }
+
+        alert("Please check alarm type. It is not correct");
+
+    }
+
+
+    //Set alarm type AlarmByTime
+    function setAlarmByTime(dev, action) {
+        var timer = document.getElementById('alarmTimer').value;
+        if (timer == '') {
+            alert('Please choice timer for alarm action');
+            return;
+        }
+
+        var url = 'ajax/alarm/@dev/@timer/@action/@other';
+        url = url.replace("@dev", dev).replace("@timer", timer).replace("@action", action);
+
+        if (action == 'remove') {
+            url = url.replace('@other', '');
+
+        }else{
+            var other = "@date/@hour/@min";
+
+            //Validate time. If don't select show alarm
+            var time = document.getElementById('date').value;
+            if (time == "") {
+                alert('Please set time information for alarm action');
+                return;
+            }
+
+            //Validate hour.
+            var hour = document.getElementById('hour').value;
+            if (hour == "" || hour < 0) {
+                alert('Please set hour information for alarm action');
+                return;
+            }
+
+            //Validate minute
+            var min = document.getElementById('min').value;
+
+            if (min == "" || min < 0) {
+                alert('Please set minute information for alarm action');
+                return;
+            }
+
+            var other = other.replace("@date", time).replace("@min", min).replace("@hour", hour);
+            url = url.replace("@other", other);
+
+        }
+
+        checkExistAndPerformByTime(url, action, dev, timer);
+
+    }
+
+    function setAlarmByMinute(dev, action) {
+         var timer = document.getElementById('alarmTimer').value;
+        if (timer == '') {
+            alert('Please choice timer for alarm action');
+            return;
+        }
+
+        var url = 'ajax/alarm/@dev/@timer/@action/@other';
+        url = url.replace("@dev", dev).replace("@timer", timer).replace("@action", action);
+
+        if (action == 'remove') {
+            url = url.replace('@other', '');
+        }else{
+            minute = document.getElementById('alarmValue').value;
+            if(minute == "" || minute < 0) {
+                alert('Please set minute information for alert action');
+                return;
+            }
+
+            url = url.replace("@other", minute);
+        }
+        console.log(url);
+
+        checkExistAndPerformByTime(url, action, dev, timer);
+
+
+    }
+
+    function setAlarmByTemp(dev, action) {
+
+        var url = 'ajax/alarmtemp/@dev/@action/@other';
+        url = url.replace("@dev", dev).replace("@action", action);
+        console.log(url);
+
+        if(action == 'remove') {
+            url = url.replace('@other', '');
+        }else{
+            var condition = document.getElementById('ifValue').value;
+            if (condition == "") {
+                alert('Please set condition for temperature Alarm');
+                return;
+            }
+
+            var tempValue = document.getElementById('alarmValue').value;
+            if (tempValue == "") {
+                alert('Please set temperature information for alarm action');
+                return;
+            }
+
+            var other = "@condition/@temp";
+            other = other.replace("@condition", condition).replace("@temp", tempValue);
+            url = url.replace("@other", other);
+        }
+        console.log(url);
+
+        checkExistAndPerformAlertByTemp(url, dev, action);
+
+    }
+
+
+    function updateAlarmTemp(dev) {
+        var url = "ajax/alarmtemp/@dev/";
+        url = url.replace('@dev', dev);
+
+        var alarm_request = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        alarm_request.done(function (data) {
+            var result = JSON.parse(data.content);
+            if (result['status']) {
+                var dev_id = result['dev'];
+                var condition = result['condition'];
+                var temp = result['temp'];
+                var action = result['action'];
+
+                var msg = '@action @condition @temp °C'.replace('@action', changeActionView(action));
+                msg = msg.replace('@condition', condition).replace('@temp', temp);
+                var id = 'dev@dev_temp'.replace('@dev', dev_id);
+                changeValue(id, msg);
+            }else{
+                var id = '@dev_temp'.replace('@dev', dev);
+                changeValue(id, '');
+            }
+            console.log(result)
+        });
+
+    }
+
+    function checkExistAndPerformAlertByTemp(url, dev, action) {
+        //Check overwrite to alarm
+        var url_check = 'alarmtemp/@dev'.replace('@dev', dev);
+        var requestAlarm = $.ajax({
+            url: url_check,
+            type: 'GET'
+        });
+
+        //Check status of request from server
+        requestAlarm.done(function (data) {
+        var result = JSON.parse(data.content);
+
+            console.log(result);
+            //Set alarm success
+            if (!result['status']) {
+                //Perform action
+                setAlarmTemp(url, dev);
+            } else {
+                //Update alarmTime, set action, countdown
+                var ret = false;
+
+                //Is action remove
+                if (action == 'remove') {
+                    ret = confirmAction('Do you want Remove this Alarm by Temperature?');
+                } else {
+                    ret = confirmAction('Do you want Update this Alarm by Temperature?');
+                }
+
+                //console.log(ret)
+                if (!ret) {
+                    return;
+                } else {
+                    setAlarmTemp(url, dev);
+                }
+            }
+        });
+
+    }
+
+
+
+    //Set alarm for temperature
+    function setAlarmTemp(url, dev) {
+        //Send request to server
+        var requestAlarm = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        //Check status of request from server
+        requestAlarm.done(function (data) {
+            var result = JSON.parse(data.content);
+
+            //Set alarm success
+            if (result['status']) {
+                //Update alarm time, set action, countdown
+                updateAlarmTemp(dev);
+
+            } else {
+                alert('Please check information input. Operation is not successful');
+            }
+        });
+    }
+
+
+    //Show Timer form
+    //Action is 0: hide, 1:show
+    //input name form such as timer, date, hour, min
+    function showInputForm(input, action) {
+
+        if (input == "timer") {
+            if (action == 0) {
+                $("#timerTd").hide();
+                $("#timerInput").hide();
+                return;
+            }
+
+            if (action == 1) {
+                $("#timerTd").show();
+                $("#timerInput").show();
+                return;
+            }
+
+        }
+
+
+        if (input == "date") {
+            if (action == 0) {
+                $("#dateInput").hide();
+                $("#dateTd").hide();
+                return;
+            }
+
+            if (action == 1) {
+                $("#dateInput").show();
+                $("#dateTd").show();
+                return;
+            }
+
+        }
+
+        if (input == "hour") {
+            if (action == 0) {
+                $("#hourTd").hide();
+                $("#hourInput").hide();
+                return;
+            }
+
+            if (action == 1) {
+                $("#hourTd").show();
+                $("#hourInput").show();
+                return;
+            }
+        }
+
+        if (input == "minute") {
+            if (action == 0) {
+                $("#minInput").hide();
+                $("#minTd").hide();
+                return;
+            }
+
+            if (action == 1) {
+                $("#minInput").show();
+                $("#minTd").show();
+                return;
+            }
+        }
+
+        if (input == 'if') {
+            if (action == 0) {
+                $("#ifTd").hide();
+                $("#ifInput").hide();
+                return;
+            }
+
+            if (action == 1) {
+                $("#ifTd").show();
+                $("#ifInput").show();
+                return;
+            }
+
+
+        }
+
+        if (input == 'temp') {
+            if (action == 0) {
+                $("#valueInput").hide();
+                $("#valueTd").hide();
+                return;
+            }
+
+            if (action === 1) {
+                $("#valueInput").show();
+                $("#valueTd").show();
+                return;
+            }
+        }
+
+
+    }
+
+    function hideAllInputForm() {
+        //Hide all input form
+        showInputForm('date', 0);
+        showInputForm('timer', 0);
+        showInputForm('hour', 0);
+        showInputForm('minute', 0);
+        showInputForm('temp', 0);
+        showInputForm('if', 0);
+    }
+
+
+
+    $(document).ready(function () {
+        toggleFields(); //call this first so we start out with the correct visibility depending on the selected form values
+        //this will call our toggleFields function every time the selection value of our underAge field changes
+
+        $("#alarmType").change(function () {
+            toggleFields();
+        });
+
+        $("#alarmAction").change(function() {
+            if($("#alarmAction").val() == "remove") {
+                hideAllInputForm();
+                if($("#alarmType").val() == "alarmByTime" || $("#alarmType").val() == "alarmByMin") {
+                    showInputForm('timer', 1);
+                }
+            }else{
+                toggleFields();
+            }
+
+        });
+
+    });
+    //this toggles the visibility of our parent permission fields depending on the current selected value of the underAge field
+    function toggleFields() {
+
+        var alarmType = $("#alarmType").val();
+        var actionType = $("#alarmAction").val();
+        hideAllInputForm();
+
+        if (alarmType == "alarmByTime" && actionType != "remove" && actionType != "") {
+
+            showInputForm('date', 1);
+            showInputForm('timer', 1);
+            showInputForm('hour', 1);
+            showInputForm('minute', 1);
+            return;
+
+        }
+
+        if ((alarmType == "alarmByTime" || alarmType == "alarmByMin") && actionType == "remove") {
+
+            //showInputForm('date', 1);
+            showInputForm('timer', 1);
+            //showInputForm('hour', 1);
+            //showInputForm('minute', 1);
+            return;
+
+        }
+
+        if (alarmType == "alarmByMin" && actionType != "remove" && actionType != "") {
+
+            showInputForm('temp', 1);
+            showInputForm('timer', 1);
+            //Change title column to Minute
+            changeValue('valueTd', 'Minute')
+            return;
+        }
+
+
+        if (alarmType == "alarmByTemp" && actionType != "remove" && actionType != "") {
+
+            showInputForm('if', 1);
+            showInputForm('temp', 1);
+            //Change title column to Temperature
+            changeValue('valueTd', 'Temperature (°C)')
+
+            return;
+        }
+
+    }
+
+
+</script>
+
+
+<script>
+    $(document).ready(function () {
+        $("#date").datepicker(
+                {dateFormat: 'dd/mm/yy'}
+        );
+    });
+</script>
+
+
+<table width="50%" border="1" align="left" id="config" style="margin: 15px 15px;">
+    <!--Select Device -->
+    <tr style="color:#FFFFFF">
+        <th width="auto" align="center">Device</th>
+        <th width="auto" align="center">Type</th>
+        <th width="auto" align="center">Action</th>
+        <th width="auto" align="center" id="timerTd">Auto</th>
+        <th width="auto" align="center" id="ifTd">Condition</th>
+        <th width="auto" align="center" id="valueTd">Set Value</th>
+        <th width="auto" align="center" id="dateTd">Date</th>
+        <th width="auto" align="center" id="hourTd">&nbsp;&nbsp;&nbsp;&nbsp;Hour&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <th width="auto" align="center" id="minTd">Minute</th>
+        <th width="auto" align="center">Confirm</th>
+    </tr>
+    <tr>
+        <td width="auto">
+
+            <select name="Device" id="alarmDevice" style="width:100%">
+                <option value="">Select Device ...</option>
+                {% for dev in devList %}
+                    <option value="dev{{ dev.id }}">Device {{ dev.id }}</option>
+                {% endfor %}
+            </select>
+
+        </td>
+
+        <!--Select Value -->
+        <td width="auto">
+            <select id="alarmType" name="alarmType" style="width:100%">
+                <option value=""> Select Alarm Type ...</option>
+                <option value="alarmByTime">Alarm by Time</option>
+                <option value="alarmByMin">Alarm by Minute</option>
+                <option value="alarmByTemp">Alarm by Temperature</option>
+            </select>
+        </td>
+
+        <!--Select Action -->
+        <td width="auto">
+
+            <select name="Action" id="alarmAction" style="width:100%">
+                <option value=""> Select Action ...</option>
+                <option value="on">ON</option>
+                <option value="off">OFF</option>
+                <option value="remove">REMOVE</option>
+            </select>
+        </td>
+        <!--Select Timer -->
+        <td width="auto" id="timerInput">
+
+            <select name="Auto" id="alarmTimer">
+                <option value="">Select Timer ...</option>
+
+                {% for timer in timerList %}
+                    <option value="timer{{ timer }}">Timer {{ timer }}</option>
+                {% endfor %}
+
+            </select>
+
+        </td>
+
+
+        <td id="ifInput" width="auto">
+            <select id="ifValue" name="ifValue" style="width:100%">
+            <option value=""> Select Condition ...</option>
+            <option value="gt"> Greate Than</option>
+            <option value="gte"> Greate Than or Equal</option>
+            <option value="lt"> Less Than</option>
+            <option value="lte"> Less Than or Equal</option>
+            <option value="eq"> Equal</option>
+            </select>
+        </td>
+
+        <td id="valueInput" width="auto">
+            <input id="alarmValue" name="alarmValue" type="text"/>
+        </td>
+
+
+        <!--Select Year -->
+        <td width="auto" id="dateInput">
+            <!--Load calendar -->
+            <input id="date"/>
+        </td>
+        <!--Select Hour -->
+        <td width="auto" id="hourInput">
+            <select name="hour" id="hour" style="width:100%">
+                <option value="">Select Hour ...</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+            </select>
+        </td>
+        <!--Select Min -->
+        <td width="auto" align="center" id="minInput" style="width:100%">
+
+            <select name="Min" id="min">
+                <option value="">Select Minute ...</option>
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
+                <option value="17">17</option>
+                <option value="18">18</option>
+                <option value="19">19</option>
+                <option value="20">20</option>
+                <option value="21">21</option>
+                <option value="22">22</option>
+                <option value="23">23</option>
+                <option value="24">24</option>
+                <option value="25">25</option>
+                <option value="26">26</option>
+                <option value="27">27</option>
+                <option value="28">28</option>
+                <option value="29">29</option>
+                <option value="30">30</option>
+                <option value="31">31</option>
+                <option value="32">32</option>
+                <option value="33">33</option>
+                <option value="34">34</option>
+                <option value="35">35</option>
+                <option value="36">36</option>
+                <option value="37">37</option>
+                <option value="38">38</option>
+                <option value="39">39</option>
+                <option value="40">40</option>
+                <option value="41">41</option>
+                <option value="42">42</option>
+                <option value="43">43</option>
+                <option value="44">44</option>
+                <option value="45">45</option>
+                <option value="46">46</option>
+                <option value="47">47</option>
+                <option value="48">48</option>
+                <option value="49">49</option>
+                <option value="50">50</option>
+                <option value="51">51</option>
+                <option value="52">52</option>
+                <option value="53">53</option>
+                <option value="54">54</option>
+                <option value="55">55</option>
+                <option value="56">56</option>
+                <option value="57">57</option>
+                <option value="58">58</option>
+                <option value="59">59</option>
+            </select>
+
+        </td>
+
+
+        <td width="3%"><input class="button" type="submit" value="Apply" name="Apply"
+                              onclick="setAlarm(this.form)">
+        </td>
+    </tr>
+</table>
+

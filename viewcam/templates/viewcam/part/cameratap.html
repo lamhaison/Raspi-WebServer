@@ -1,0 +1,423 @@
+<script type="text/javascript">
+
+
+    function sendRequestCamControl(action) {
+        var url = '/controlcam/@action'.replace('@action', action);
+        var request2 = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        request2.done(function (data) {
+            var jsonData = JSON.parse(data.content);
+            console.log(jsonData);
+
+            // Change status cam after rcv json result
+            if (action == 'start' || action == 'stop') {
+                var status = 'O';
+                if (jsonData['cam_status'] == 'on') {
+                    status = 'II';
+
+                }
+                set_cam_status(cam_status);
+                createViewCam(540, 960);
+
+
+            }
+
+
+        });
+    }
+
+    // Set status camera
+    function set_cam_status(status) {
+        $('#cam_status').html(status);
+    }
+
+
+    function get_camera_status() {
+        var url = '/controlcam/@action'.replace('@action', 'status');
+        var request2 = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        request2.done(function (data) {
+            var jsonData = JSON.parse(data.content);
+            // console.log(jsonData);
+            // Status of json is success
+            if (jsonData['status']) {
+                // console.log('get cam status success');
+
+                // Translate status to text
+                // Default is Off
+                var cam_status = 'O';
+                // cam turn on
+                if (jsonData['cam_status'] == 'on') {
+                    cam_status = 'II';
+                }
+
+                // Change label status of cam
+                set_cam_status(cam_status);
+
+
+            }
+
+        });
+    }
+
+    function controlLeft() {
+        sendRequestCamControl('left');
+    }
+
+    function controlRight() {
+        sendRequestCamControl('right');
+    }
+
+    function controlDown() {
+        sendRequestCamControl('down');
+    }
+
+    function controlUp() {
+        sendRequestCamControl('up');
+    }
+
+    function controllPower() {
+
+        cam_status = $('#cam_status').text();
+        console.log(cam_status);
+
+        if (cam_status == 'II') {
+            sendRequestCamControl('stop');
+        }
+
+        if (cam_status == 'O') {
+            sendRequestCamControl('start');
+        }
+
+
+    }
+
+
+    function resetCamera() {
+
+        // alert('reset cam');
+
+        var px = $('#px').val();
+        var bit_rate = $('#kbps').val();
+        var frame_ps = $('#frame').val();
+        var sharpness = $('#sharpness').val();
+        var contrast = $('#contrast').val();
+        var brightness = $('#brightness').val();
+        var saturation = $('#saturation').val();
+        var iso = $('#iso').val();
+        var ev = $('#ev').val();
+        var ex = $('#ex').val();
+        var awb = $('#awb').val();
+
+        var url = '/controlcam/@px/@bit_rate/@frame_ps/@sharpness/@contrast/@brightness/@saturation/@iso/@ev/@ex/@awb';
+        url = url.replace('@px', px).replace('@bit_rate', bit_rate).replace('@frame_ps', frame_ps);
+        url = url.replace('@sharpness', sharpness).replace('@contrast', contrast).replace('@brightness', brightness);
+        url = url.replace('@saturation', saturation).replace('@iso', iso).replace('@ev', ev).replace('@ex', ex);
+        url = url.replace('@awb', awb);
+
+        var request = $.ajax({
+            url: url,
+            type: 'GET'
+        });
+
+        // createViewCam(540, 960);
+        request.done(function (data) {
+            var jsonData = JSON.parse(data.content);
+            console.log(jsonData);
+            createViewCam(540, 960);
+
+        });
+
+    }
+
+</script>
+
+
+<div id="tab3" class="tab_content">
+    <div id="setting_camera">
+        <table bgcolor="#2F4F4F" width="1295px" border="1" align="left" id="config" style="margin: 0px 0px 20px 0px ;">
+            <tr>
+                <td width="auto">
+                    Size
+                </td>
+                <td width="auto">
+                    Bitrates
+                </td>
+                <td width="auto">
+                    FPS
+                </td>
+                <td width="auto">
+                    Sharpness
+                </td>
+                <td width="auto">
+                    Contrast
+                </td>
+                <td width="auto">
+                    Brightness
+                </td>
+                <td width="auto">
+                    Saturation
+                </td>
+                <td width="auto">
+                    ISO
+                </td>
+                <td width="auto">
+                    EV
+                </td>
+                <td width="auto">
+                    EX Mode
+                </td>
+                <td width="auto">
+                    AWB
+                </td>
+                <td width="auto">
+                    Confirm
+                </td>
+            </tr>
+
+
+            <tr>
+                <td>
+                    <select name="cam_w_h" id="px">
+                        <option value="none">Select Size ...</option>
+                        {% for option in size_option_list %}
+                            <option value="{{ option.value }}">{{ option.desc }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="kbitrate" id="kbps">
+                        <option value="none">Select Kb...</option>
+                        {% for option in kbitrate_option_list %}
+                            <option value="{{ option.value }}">{{ option.desc }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <select name="frame_psecond" id="frame">
+                        <option value="none">Select FPS...</option>
+                        {% for  option in frame_psecond_option_list %}
+                            <option value="{{ option.value }}">{{ option.desc }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+
+                <td>
+                    <select name="sharpness" id="sharpness">
+                        <option value="none">Select Sharp...</option>
+                        <option value="0">-100</option>
+                        <option value="1">-90</option>
+                        <option value="2">-80</option>
+                        <option value="3">-70</option>
+                        <option value="4">-60</option>
+                        <option value="5">-50</option>
+                        <option value="6">-40</option>
+                        <option value="7">-30</option>
+                        <option value="8">-20</option>
+                        <option value="9">-10</option>
+                        <option value="10">0</option>
+                        <option value="11">10</option>
+                        <option value="12">20</option>
+                        <option value="13">30</option>
+                        <option value="14">40</option>
+                        <option value="15">50</option>
+                        <option value="16">60</option>
+                        <option value="17">70</option>
+                        <option value="18">80</option>
+                        <option value="19">90</option>
+                        <option value="20">100</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="contrast" id="contrast">
+                        <option value="none">Select Cont...</option>
+                        <option value="0">-100</option>
+                        <option value="1">-90</option>
+                        <option value="2">-80</option>
+                        <option value="3">-70</option>
+                        <option value="4">-60</option>
+                        <option value="5">-50</option>
+                        <option value="6">-40</option>
+                        <option value="7">-30</option>
+                        <option value="8">-20</option>
+                        <option value="9">-10</option>
+                        <option value="10">0</option>
+                        <option value="11">10</option>
+                        <option value="12">20</option>
+                        <option value="13">30</option>
+                        <option value="14">40</option>
+                        <option value="15">50</option>
+                        <option value="16">60</option>
+                        <option value="17">70</option>
+                        <option value="18">80</option>
+                        <option value="19">90</option>
+                        <option value="20">100</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="brightness" id="brightness">
+                        <option value="none">Select Bri...</option>
+                        <option value="0">0</option>
+                        <option value="1">10</option>
+                        <option value="2">20</option>
+                        <option value="3">30</option>
+                        <option value="4">40</option>
+                        <option value="5">50</option>
+                        <option value="6">60</option>
+                        <option value="7">70</option>
+                        <option value="8">80</option>
+                        <option value="9">90</option>
+                        <option value="10">100</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="saturation" id="saturation">
+                        <option value="none">Select Sat...</option>
+                        <option value="0">-100</option>
+                        <option value="1">-90</option>
+                        <option value="2">-80</option>
+                        <option value="3">-70</option>
+                        <option value="4">-60</option>
+                        <option value="5">-50</option>
+                        <option value="6">-40</option>
+                        <option value="7">-30</option>
+                        <option value="8">-20</option>
+                        <option value="9">-10</option>
+                        <option value="10">0</option>
+                        <option value="11">10</option>
+                        <option value="12">20</option>
+                        <option value="13">30</option>
+                        <option value="14">40</option>
+                        <option value="15">50</option>
+                        <option value="16">60</option>
+                        <option value="17">70</option>
+                        <option value="18">80</option>
+                        <option value="19">90</option>
+                        <option value="20">100</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="ISO" id="iso">
+                        <option value="none">Select ISO...</option>
+                        <option value="0">100</option>
+                        <option value="1">200</option>
+                        <option value="2">300</option>
+                        <option value="3">400</option>
+                        <option value="4">500</option>
+                        <option value="5">600</option>
+                        <option value="6">700</option>
+                        <option value="7">800</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="EV" id="ev">
+                        <option value="none">Select EV...</option>
+                        <option value="0">-1</option>
+                        <option value="1">-9</option>
+                        <option value="2">-8</option>
+                        <option value="3">-7</option>
+                        <option value="4">-6</option>
+                        <option value="5">-5</option>
+                        <option value="6">-4</option>
+                        <option value="7">-3</option>
+                        <option value="8">-2</option>
+                        <option value="9">-1</option>
+                        <option value="10">0</option>
+                        <option value="11">1</option>
+                        <option value="12">2</option>
+                        <option value="13">3</option>
+                        <option value="14">4</option>
+                        <option value="15">5</option>
+                        <option value="16">6</option>
+                        <option value="17">7</option>
+                        <option value="18">8</option>
+                        <option value="19">9</option>
+                        <option value="20">1</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="EX_mode" id="ex">
+                        <option value="none">Select EX...</option>
+                        <option value="0">off</option>
+                        <option value="1">auto</option>
+                        <option value="2">night</option>
+                        <option value="3">nightpreview</option>
+                        <option value="4">backlight</option>
+                        <option value="5">spotlight</option>
+                        <option value="6">sports</option>
+                        <option value="7">snow</option>
+                        <option value="8">beach</option>
+                        <option value="9">verylong</option>
+                        <option value="10">fixedfps</option>
+                        <option value="11">antishake</option>
+                        <option value="12">fireworks</option>
+                    </select>
+                </td>
+
+
+                <td>
+                    <select name="AWB" id="awb">
+                        <option value="none">Select AWB...</option>
+                        <option value="0">off</option>
+                        <option value="1">auto</option>
+                        <option value="2">sun</option>
+                        <option value="3">cloud</option>
+                        <option value="4">shade</option>
+                        <option value="5">tungsten</option>
+                        <option value="6">fluorescent</option>
+                        <option value="7">incandescent</option>
+                        <option value="8">flash</option>
+                        <option value="9">horizon</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="msgBtnBack" style="width:100%" onclick="resetCamera()">Apply</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+    <div id="control_camera" style="float: right; clear:both; margin-top:130px; margin-right:60px">
+        <table>
+            <tbody>
+            <tr>
+                <td></td>
+                <td onclick="controlUp()">
+                    <div class="myButton">U</div>
+                </td>
+                <td></td>
+            </tr>
+            <tr>
+                <td onclick="controlLeft()">
+                    <div class="myButton">L</div>
+                </td>
+                <td onclick="controllPower()">
+                    <div class="myButton" id="cam_status">X</div>
+                </td>
+                <td onclick="controlRight()">
+                    <div class="myButton">R</div>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td onclick="controlDown()">
+                    <div class="myButton">D</div>
+                </td>
+                <td></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="strobeMediaPlayback" style="min-width:auto; height: auto; margin: 0 auto; float: right; boder: 10px;">
+        <p>Alternative content</p>
+    </div>
+
+</div>

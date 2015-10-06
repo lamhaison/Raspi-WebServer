@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+{% load staticfiles %}
+<script type="text/javascript" src="{% static 'viewcam/jquery/jquery1.6.2.min.js'%}"></script>
+<script type="text/javascript" src="{% static 'viewcam/jquery/jquery-ui.min.js'%}"></script>
+
+<!-- Css for calendar -->
+<link ref="stylesheet" type="text/css" href="{% static 'viewcam/css/jquery-ui.css' %}" />
+<script>
+    $(document).ready(function() {
+    $("#datepicker").datepicker();
+});
+
+
+    function changeType(frm, type){
+        if (type == 'time') {
+            alert('Chon time');
+
+        }else{
+            if (type == 'm') {
+                alert('Chon theo m');
+            } else{
+                alert('Unknow');
+            }
+        }
+    }
+</script>
+
+</head>
+<body>
+    <!--
+    <input id="datepicker" />
+    -->
+    <form>
+        <select name="hour" onclick="changeType(this.form, 'time')">
+            <option value="hour0" onclick="changeType(this.form, 'time')">Time</option>
+            <option value="hour1" onclick="changeType(this.form, 'm')">Minute</option>
+        </select>
+    </form>
+
+
+
+</body>
+</html>

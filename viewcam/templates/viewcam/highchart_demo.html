@@ -1,0 +1,46 @@
+<html>
+<head>
+
+    {% load staticfiles %}
+    {% include 'viewcam/part/resource.html' %}
+
+    <script>
+        $(function () {
+            $('#container_1').highcharts({
+                chart: {
+                    type: 'bar',
+                    zoomType: 'xy'
+                },
+
+                title: {
+                    text: 'Fruit Consumption'
+                },
+                xAxis: {
+                    categories: ['Apples', 'Bananas', 'Oranges']
+                },
+                yAxis: {
+                    title: {
+                        text: 'Fruit eaten'
+                    }
+                },
+                series: [{
+                    name: 'Jane',
+                    data: [1, 0, 4]
+                }, {
+                    name: 'John',
+                    data: [5, 7, 3]
+                }]
+            });
+        });
+    </script>
+
+
+</head>
+<body>
+
+<div id="container_1" style="width:100%; height:400px;"></div>
+
+</body>
+
+
+</html>

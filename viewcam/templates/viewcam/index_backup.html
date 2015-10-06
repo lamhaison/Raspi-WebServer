@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <title>Strobe Media Playback</title>
+	{% load staticfiles %}
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<script type="text/javascript" src="{% static 'viewqos/strobe/lib/swfobject.js' %}"></script>
+        <script type="text/javascript" src="{% static 'viewqos/strobe/lib/ParsedQueryString.js' %}"></script>
+
+        <script type="text/javascript">
+            
+            // Collect query parameters in an object that we can
+            // forward to SWFObject:
+            
+	
+            var pqs = new ParsedQueryString();
+            var parameterNames = pqs.params(false);
+            var parameters = {
+                src: "http://mediapm.edgesuite.net/strobe/content/test/AFaerysTale_sylviaApostol_640_500_dfdfshort.flv",
+                autoPlay: "false",
+                verbose: true,
+                controlBarAutoHide: "false",
+                controlBarPosition: "bottom",
+                poster: "{% static 'viewqos/strobe/images/poster.png' %}"
+            };
+            
+            for (var i = 0; i < parameterNames.length; i++) {
+                var parameterName = parameterNames[i];
+                parameters[parameterName] = pqs.param(parameterName) ||
+                parameters[parameterName];
+            }
+            
+       	    var wmodeValue = "direct";
+            var wmodeOptions = ["direct", "opaque", "transparent", "window"];
+            if (parameters.hasOwnProperty("wmode"))
+            {
+            	if (wmodeOptions.indexOf(parameters.wmode) >= 0)
+            	{
+            		wmodeValue = parameters.wmode;
+            	}	            	
+            	delete parameters.wmode;
+            }
+            
+            // Embed the player SWF:	            
+            swfobject.embedSWF(
+				"{% static 'viewqos/strobe/StrobeMediaPlayback.swf' %}"
+				, "StrobeMediaPlayback"
+				, 640
+				, 480
+				, "10.1.0"
+				, "{% static 'viewqos/strobe/expressInstall.swf' %}"
+				, parameters
+				, {
+	                allowFullScreen: "true",
+	                wmode: wmodeValue
+	            }
+				, {
+	                name: "StrobeMediaPlayback"
+	            }
+			);
+            
+        </script>
+
+    </head>
+
+
+    <body>
+
+        <table width="100%" border="0" cellspacing="5">
+            <tr>
+		
+                <td>
+                    <div id="StrobeMediaPlayback">
+                    </div>
+                </td>
+		
+            </tr>
+        </table>
+
+	
+    </body>
+</html>
+

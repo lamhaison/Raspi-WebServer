@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Strobe Media Playback</title>
+	{% load staticfiles %}
+	<script type="text/javascript" src="{% static 'viewcam/strobe/lib/swfobject.js' %}"></script>
+	<!--
+        <script type="text/javascript" src="{% static 'viewcam/strobe/lib/ParsedQueryString.js' %}"></script>
+	-->
+   <script type="text/javascript">        
+          
+       // Create a StrobeMediaPlayback configuration 
+      var parameters = {  
+                     src: "http://mediapm.edgesuite.net/strobe/content/test/AFaerysTale_sylviaApostol_640_500_short.flv",  
+                              autoPlay: true,  
+                     controlBarAutoHide: false,  
+                     playButtonOverlay: true,  
+                     showVideoInfoOverlayOnStartUp: false,  
+                              optimizeBuffering : false,  
+                              initialBufferTime : 0.1,  
+                              expandedBufferTime : 0.1,  
+                              minContinuousPlayback : 0.1,  
+                     poster: "{% static 'viewcam/strobe/images/poster.png' %}"  
+                   };  
+	// Embed the player SWF:          
+      swfobject.embedSWF
+         ( "{% static 'viewcam/strobe/StrobeMediaPlayback.swf' %}"
+         , "strobeMediaPlayback"
+         , 960
+         , 540
+         , "10.1.0"
+         , {}
+         , parameters
+         , { allowFullScreen: "true"}
+         , { name: "strobeMediaPlayback" }
+         );
+      
+    </script>     
+  </head>
+  <body>
+   
+   <div id="strobeMediaPlayback">
+      <p>Alternative content</p>
+    </div>
+  </body>
+</html>
+
+

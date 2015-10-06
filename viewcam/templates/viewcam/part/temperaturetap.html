@@ -1,0 +1,74 @@
+<script>
+    /*
+     setInterval(function () {
+     console.log('auto reload');
+     autoLoadHighChat();
+     }, 60000);
+     */
+
+    /*
+     $(document).ready(function () {
+     toggleFields(); //call this first so we start out with the correct visibility depending on the selected form values
+     //this will call our toggleFields function every time the selection value of our underAge field changes
+
+     $("#val_interval").change(function () {
+     alert('Have change val_interval');
+     });
+
+     $("#val_unit").change(function () {
+     alert("Have change val_unit");
+     });
+
+     });
+     */
+
+    jQuery(document).ready(function () {
+
+    });
+
+    function updateChart() {
+        // val_interval = document.getElementById('val_interval').value;
+        // val_unit = document.getElementById('val_unit').value;
+        // alert(val_interval);
+        // alert(val_unit);
+        autoLoadHighChat()
+
+    }
+
+</script>
+
+
+<div id="tab2" class="tab_content">
+    <div id="container" style="width: 1200px;height: 500px; margin: 30px; float:right;"></div>
+
+    <div id="interval" style="min-width: auto; height: auto; margin: auto;">
+        <div id="outer">
+            <div class="inner"><div style="text-align:center; border: 1px solid grey;"><b>&nbsp;Interval Times&nbsp;</b></div></div>
+            <div class="inner">
+                <form action="">
+                    <select id="val_interval" name="val_interval">
+                        <option value="1">1</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="30">30</option>s
+                    </select>
+                </form>
+            </div>
+            <div class="inner">
+                <form action="">
+                    <select id="val_unit" name="val_unit">
+                        <option value="min">Min</option>
+                        <option value="hour">Hour</option>
+                        <option value="day">Day</option>
+                    </select>
+                </form>
+            </div>
+            <div class="inner">
+                <button class="msgBtnBack" onclick="updateChart()">Apply</button>
+            </div>
+        </div>
+    </div>
+    <!--
+    <div id="enrollment_container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+    -->
+</div>

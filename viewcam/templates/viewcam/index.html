@@ -1,0 +1,264 @@
+<!-- DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" -->
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    {% load staticfiles %}
+<title>AVR Web Server v3</title><style type="text/css">
+
+.container { width: 1200px; margin: 10px auto; }
+ul.tabs { margin: 0; padding: 0; float: left; list-style: none; height: 32px; width: 1000px; border-bottom: 1px solid #999; border-left: 1px solid #999; width: 100%; }
+ul.tabs li { float: left; margin: 0;padding: 0; height: 31px; line-height: 31px; border: 1px solid #999; border-left: none; margin-bottom: -1px; background: #e0e0e0; overflow: hidden; position: relative; }
+ul.tabs li a { text-decoration: none;color: #000; display: block; font-size: 15px; padding: 0 20px; border: 1px solid #fff; outline: none;}
+ul.tabs li a:hover { background: #ccc;}
+html ul.tabs li.active, html ul.tabs li.active a:hover  { background: #fff; border-bottom: 1px solid #fff;}
+.tab_container {border: 1px solid #999; border-top: none; clear: both; float: left;  width: 100%; background: #fff; -moz-border-radius-bottomright: 5px; -khtml-border-radius-bottomright: 5px; -webkit-border-bottom-right-radius: 5px; -moz-border-radius-bottomleft: 5px; -khtml-border-radius-bottomleft: 5px; -webkit-border-bottom-left-radius: 5px;}
+.tab_content { float: left; padding: 20px; font-style: arial; font-size: 16px;}
+.on { border:1; width: 20px; height: 20px; background: blue; text-align: center; padding: 0px; color: #fff; -moz-border-radius: 10px; -webkit-border-radius: 10px; border-radius: 10px;}
+.button{width: 100%;}
+.off { border:1; width: 20px; height: 20px; background: white; text-align: center; padding: 0px; color: #fff; -moz-border-radius: 10px; -webkit-border-radius: 10px; border-radius: 10px;}
+.button2{width: 80px;}
+</style>
+
+<script type="text/javascript" src="{% static 'viewcam/jquery/jquery1.3.min.js'%}"></script>
+<script type="text/javascript" src="{% static 'viewcam/jquery/jquery1.7.1.min.js'%}"></script>
+<script type="text/javascript" src="{% static 'viewcam/jquery/exporting.js'%}"></script>
+<script type="text/javascript" src="{% static 'viewcam/jquery/highcharts.js'%}"></script>
+<script type="text/javascript" src="{% static 'viewcam/jquery/jquery.ajax.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'viewcam/strobe/lib/swfobject.js' %}"></script>
+
+<script type="text/javascript">$(document).ready(function() {$(".tab_content").hide();$("ul.tabs li:first").addClass("active").show();$(".tab_content:first").show();$("ul.tabs li").click(function() {
+$("ul.tabs li").removeClass("active");$(this).addClass("active");$(".tab_content").hide();var activeTab = $(this).find("a").attr("href");$(activeTab).fadeIn();return false;});});
+</script>
+
+
+    <script type="text/javascript">
+    (function($){ // encapsulate jQuery
+    $(function () {
+            $('#container').highcharts({
+                chart: {
+                    type: 'line',
+                    marginRight: 130,
+                    marginBottom: 25
+                },
+                title: {
+                    text: 'Room Temperature Statistics ',
+                    x: -20 //center
+                },
+                xAxis: {
+                    categories: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12','13','14','15','16','17','18','19','20']
+                },
+                yAxis: {
+                    title: {
+                        text: 'Temperature (°C)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: '°C'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'top',
+                    x: -10,
+                    y: 100,
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Room',
+                    data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6,10.5,15.7,18.2,20.6,34.9,12.6,17.1,39.5]
+                }]
+            });
+        });
+    })(jQuery);
+
+    </script>
+
+
+   <script type="text/javascript">
+
+       // Create a StrobeMediaPlayback configuration
+      var parameters = {
+                     //src: "rtmp://" + window.location.hostname + "/flvplayback/myStream",
+                     src: "http://mediapm.edgesuite.net/strobe/content/test/AFaerysTale_sylviaApostol_640_500_short.flv",
+                              autoPlay: true,
+                     controlBarAutoHide: false,
+                     playButtonOverlay: true,
+                     showVideoInfoOverlayOnStartUp: false,
+                              optimizeBuffering : false,
+                              initialBufferTime : 0.1,
+                              expandedBufferTime : 0.1,
+                              minContinuousPlayback : 0.1,
+                     poster: "{% static 'viewcam/strobe/images/poster.png' %}"
+                   };
+	// Embed the player SWF:
+      swfobject.embedSWF
+         ( "{% static 'viewcam/strobe/StrobeMediaPlayback.swf' %}"
+         , "strobeMediaPlayback"
+         , 960
+         , 540
+         , "10.1.0"
+         , {}
+         , parameters
+         , { allowFullScreen: "true"}
+         , { name: "strobeMediaPlayback" }
+         );
+
+    </script>
+
+    <script type="text/javascript">
+        setInterval(function () { autoloadpage(); }, 1000); // it will call the function autoload() after each 30 seconds.
+        function autoloadpage() {
+
+            $('#wrapper').html('start query ');
+            // khi goi xong
+            var request2 = $.ajax({
+                url: '/ajax/gettime',
+                type: 'GET'
+            });
+
+            request2.done(function (data) {
+                //alert('thanh cong')
+                //msg = msg.contain;
+                console.log(data.content)
+                obj_json = JSON.parse(data.content);
+                var timeTemplate = 'Timezone: GMT+7. Current time @nowtime';
+                timeTemplate = timeTemplate.replace('@nowtime', obj_json['time']);
+                console.log(obj_json['time'])
+                console.log(timeTemplate);
+                $('#timezone').html(timeTemplate);
+            });
+
+            var requestTem = $.ajax({
+                url: 'ajax/gettem',
+                type: 'GET'
+            });
+
+            requestTem.done(function(data) {
+                console.log(data.content)
+                obj_json = JSON.parse(data.content);
+                $('#temperature').html(obj_json['tem']);
+            });
+
+            var requestControl = $.ajax({
+                url: 'ajax/control/1/1',
+                type: 'GET'
+            });
+
+
+            requestControl.done(function(data) {
+                obj_json = JSON.parse(data.content);
+                console.log(obj_json)
+            });
+
+
+            var requestStatusAll = $.ajax({
+               url: 'ajax/getstatus/1',
+                type: 'GET'
+            });
+
+            requestStatusAll.done(function(data) {
+                obj_json = JSON.parse(data.content);
+                console.log(obj_json)
+            });
+
+
+        }
+
+
+        function ControlDevice(frm, dev){
+
+            console.log('control device', dev)
+            if (frm.dev_id.value == 'On')
+                frm.dev_id.value = 'Off';
+            else
+                frm.dev_id.value = 'On'
+                //document.getElementById('btnSubmit').value = 'On'
+        }
+    </script>
+
+
+
+
+
+
+</head>
+<body bgcolor="#d0d0d0" style="padding: 20px 0px 0px 0px;">
+<div class="container">
+    <ul class="tabs">
+        <li><a href="#tab1">Control Panel</a></li>
+        <li><a href="#tab2">Temperature</a></li>
+		<li><a href="#tab3">Camera</a></li>
+    </ul>
+    <div class="tab_container">
+        <div id="tab1" class="tab_content">
+				<table bgcolor="#2F4F4F" id="root" border="1" align="center" width="1000px">
+				<tbody>
+				<tr><td colspan="4" height="100"><b><div align="center" style="font-size:25pt; color:#FFFFFF">REMOTE CONTROL AVR WEBSERVER</div></b></td></tr>
+				<tr align="left"><td height="25" valign="top" width="77%"><b><div style="color:#FFFFFF">&nbsp;Devices</div></b></td><td height="25" valign="top" width="auto"><b><div style="color:#FFFFFF">&nbsp;Sensors (<sup>o</sup>C)</div></b></td></tr>
+				<tr><td height="auto" valign="top" width="200"><p></p><div>
+
+
+                <form method="POST" action=".">
+                    <font color="#FFFFFF">
+                        <table width="95%" border="1" align="center" id="table_device"><tr align="center"><td width="15%">Names</td><td width="9%">Now States</td><td width="11%">Control Panel</td><td>Command</td><td width="15%">Countdown (Minutes)</td><td width="11%">Timer Status</td><td width="15%">Auto ON (<sup>o</sup>C)</td></tr>
+				        <tr align="center">
+                            <td>Device 1</td>
+                            <td><div class="off"></div></td>
+                            <td><input class="button" type="submit" value="ON" name="RL1"></td>
+                            <td><input type="text" name="Auto1"/></td><td></td><td></td><td></td></tr>
+				        <tr align="center">
+                            <td>Device 2</td>
+                            <td><div class="off"></div></td>
+                            <td><input class="button" type="submit" value="ON" name="RL2"></td>
+                            <td><input type="text" name="Auto2"/></td><td></td><td></td><td>H 35</td></tr>
+				        <tr align="center">
+                            <td>Device 3</td><td><div class="on"></div></td>
+                            <td><input class="button" type="submit" value="OFF" name="RL3">
+                            </td><td><input type="text" name="Auto3"/></td><td></td><td></td><td>L 35</td></tr>
+				        <tr align="center">
+                            <td>Device 4</td><td>
+                            <div class="off"></div>
+                            </td><td><input class="button" type="submit" value="ON" name="RL4">
+                            </td><td><input type="text" name="Auto4"/></td><td>61877</td><td>ON</td><td>L 30</td></tr>
+				</table>
+
+                    </font>
+
+                </form>
+
+                <p align="center">
+                    <input class="button2" type="submit" value="Submit" name="SUB">
+                </p>
+
+
+                </td><td height="auto" align="center" width="auto">
+                    <div style="font-size:50pt; color:#FFFFFF" id="temperature">
+                        33.75
+                    </div>
+                </td></tr>
+				<tr>
+                    <td colspan="4" height="25" width="auto">
+                        <div align="center" style="color:#FFFFFF" id="timezone">Timezone: GMT+7. Current time 17:54:30</div>
+                    </td>
+                </tr>
+				</tbody>
+				</table>
+        </div>
+		<div id="tab2" class="tab_content" align="center">
+				<div id="container" style="min-width: auto; height: auto; margin: 0 auto"></div>
+		</div>
+		<div id="tab3" class="tab_content" align="center">
+			   <div id="strobeMediaPlayback">
+      			<p>Alternative content</p>
+    			</div>
+		</div>
+    </div>
+</div>
+</body>
+
+</html>

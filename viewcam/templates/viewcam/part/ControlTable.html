@@ -1,0 +1,102 @@
+
+<script type="text/javascript">
+
+        function controlDevice(frm, dev){
+
+            //console.log('control device', dev)
+            var sttTemplate = 'stt@dev';
+            var url = 'ajax/control/@dev/@action'
+            sttTemplate = sttTemplate.replace('@dev', dev);
+
+            //Specific type action, if device is turned of -> have to turn on and otherwise
+            if (document.getElementById(dev).value == 'ON')
+                url = url.replace('@dev', dev).replace('@action', '0')
+            else
+                url = url.replace('@dev', dev).replace('@action', '1')
+
+            console.log('stttemplate', sttTemplate)
+            console.log('url', url)
+
+
+            var requestControl = $.ajax({
+                url: url,
+                type: 'GET'
+            });
+
+
+            requestControl.done(function(data) {
+                obj_json = JSON.parse(data.content);
+                console.log(obj_json)
+
+
+                //Can't control this device
+                /*
+                if (document.getElementById(dev).className == obj_json['status']) {
+                    alert('Please check connection between pi and device. Can not control it');
+                    return;
+                }
+                */
+
+                var status = obj_json['status'];
+                
+                document.getElementById(sttTemplate).className = status;
+                if (status == 'ON')
+                    status = 'OFF'
+                else
+                    status = 'ON'
+                    
+                document.getElementById(dev).value = status;
+                
+
+            });
+        }
+
+
+</script>
+
+
+<table width="97%" border="1" align="center" id="table_device" style="empty-cells: show;">
+    <tr align="center">
+        <td width="10%">Names</td>
+        <td width="5%">Current</td>
+        <td width="5%">Control</td>
+
+        {% for timer in timerList %}
+            <td width="7%">Timer{{ timer}}</td>
+            <td width="5%">Action</td>
+        {% endfor %}
+
+        <td width="10%">Auto base on (<sup>o</sup>C)</td>
+    </tr>
+
+    {%  for dev in devList %}
+         <tr align="center">
+            <td>{{ dev.desc }}</td>
+            <td>
+                <div id="sttdev{{ dev.id }}" class="OFF"></div>
+            </td>
+            <td><input class="button" id="dev{{ dev.id }}" type="button" value="OFF"
+                       onclick="controlDevice(this.form, 'dev{{ dev.id }}')"></td>
+
+            {% for detail in detailList %}
+                {% if dev.id == detail.dev_id %}
+                <td id="dev{{ dev.id }}_timer{{ detail.timer}}_countdown">{{detail.remain}}</td>
+                <td id="dev{{ dev.id }}_timer{{ detail.timer}}_action">{{detail.action}}</td>
+
+                {% endif %}
+            {% endfor %}
+
+            {% for detail in alarmTempList %}
+                {% if dev.id == detail.dev_id %}
+                    {% if detail.condition != '' %}
+                     <td id="dev{{ dev.id }}_temp">{{detail.action}} {{detail.condition}} {{detail.temp_value}} °C</td>
+                    {% else%}
+                    <td id="dev{{ dev.id }}_temp"></td>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+        </tr>
+    {%  endfor %}
+
+</table>

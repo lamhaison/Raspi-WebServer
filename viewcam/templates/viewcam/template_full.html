@@ -1,0 +1,546 @@
+<!-- DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" -->
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en">
+<head>
+    {% load staticfiles %}
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>AVR Web Server v31111</title>
+
+
+    {% load staticfiles %}
+    {% include "viewcam/part/resource.html" %}
+
+
+    <!--script for switch between tabs -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".tab_content").hide();
+            $("ul.tabs li:first").addClass("active").show();
+            $(".tab_content:first").show();
+            $("ul.tabs li").click(function () {
+                $("ul.tabs li").removeClass("active");
+                $(this).addClass("active");
+                $(".tab_content").hide();
+                var activeTab = $(this).find("a").attr("href");
+                $(activeTab).fadeIn();
+                return false;
+            })
+            ;
+        });
+
+    </script>
+
+
+    <!-- Define function to javascript -->
+    <script type="text/javascript">
+
+        //Show warning
+        function confirmAction(msg) {
+            var retVal = confirm(msg);
+
+            if (retVal) {
+                return true;
+            } else {
+                return false;
+            }
+
+        }
+
+        //Change value of element when you know id of it
+        function changeValue(id, newvalue) {
+
+            var oldValue = document.getElementById(id).value;
+            if (oldValue == newvalue) {
+                return
+            }
+
+            var id_replace = "#@id".replace('@id', id);
+
+            $(id_replace).html(newvalue);
+
+        }
+
+        //Change action view. Such as on->ON, of->OFF
+        function changeActionView(action) {
+
+            if (action == null || action == '') {
+                return '';
+            }
+            //  console.log(action)
+            if (action == 'on') {
+                action = 'ON'
+            } else {
+                if (action == 'off') {
+                    action = 'OFF'
+                }
+            }
+
+            return action;
+        }
+
+    </script>
+
+
+    <!--Script view videcam streaming -->
+    <script type="text/javascript">
+
+        // Create a StrobeMediaPlayback configuration
+        var parameters = {
+            src: "rtmp://" + window.location.hostname + "/flvplayback/myStream",
+            //src: "http://mediapm.edgesuite.net/strobe/content/test/AFaerysTale_sylviaApostol_640_500_short.flv",
+            autoPlay: true,
+            controlBarAutoHide: false,
+            playButtonOverlay: true,
+            showVideoInfoOverlayOnStartUp: false,
+            optimizeBuffering: false,
+            initialBufferTime: 0.1,
+            expandedBufferTime: 0.1,
+            minContinuousPlayback: 0.1,
+            poster: "{% static 'viewcam/strobe/images/poster.png' %}"
+        };
+        // Embed the player SWF:
+        swfobject.embedSWF
+        ("{% static 'viewcam/strobe/StrobeMediaPlayback.swf' %}"
+                , "strobeMediaPlayback"
+                , 960
+                , 540
+                , "10.1.0"
+                , {}
+                , parameters
+                , {allowFullScreen: "true"}
+                , {name: "strobeMediaPlayback"}
+        );
+
+    </script>
+
+
+    <!--Script for update device's state and timer from server -->
+    <script type="text/javascript">
+
+        //Update all timer for active alertTime
+        function updateAllTimer() {
+            var request = $.ajax({
+                url: '/ajax/alarmtime/all',
+                type: 'GET'
+            });
+
+            request.done(function (data) {
+                var jsonData = JSON.parse(data.content);
+
+                if (jsonData['status']) {
+                    var info = jsonData['info'];
+                    //For list device
+                    for (var dev in info) {
+
+                        //Get listTimer
+                        var timerList = info[dev];
+
+                        for (var timer in timerList) {
+                            //Get detail Timer
+                            var detailTimer = timerList[timer];
+                            //console.log(timer)
+
+                            //Get id html of view for device
+                            var id = '@dev_@timer_@field'.replace('@dev', dev).replace('@timer', timer);
+                            var id_action = id.replace('@field', 'action');
+                            var id_countDow = id.replace('@field', 'countdown');
+                            //console.log(id_action);
+                            //console.log(id_countDow);
+
+
+                            //Change value action and countdown
+
+                            changeValue(id_action, changeActionView(detailTimer['action']));
+                            //console.log('remain', detailTimer['remain']);
+                            //console.log('action', detailTimer['action']);
+                            changeValue(id_countDow, detailTimer['remain']);
+
+                        }
+
+                    }
+                }
+
+            });
+        }
+
+
+        function autoLoadHighChat() {
+
+            // updateAllTimer();
+
+            //Begin process for update server's time
+
+            var time_label = [];
+            var data_list = [];
+
+            var request2 = $.ajax({
+                url: '/gettemplist/10',
+                type: 'GET'
+            });
+
+            request2.done(function (data) {
+                var jsonData = JSON.parse(data.content);
+                console.log(jsonData);
+
+                var temp_list = jsonData['temp_list'];
+                for (var row in temp_list) {
+
+                    var detail = temp_list[row];
+                    console.log(detail)
+                    console.log(detail['time']);
+                    console.log(detail['value']);
+                    time_label[time_label.length] = detail['time'];
+                    data_list[data_list.length] = detail['value'];
+
+                }
+
+                console.log(data_list);
+                console.log(time_label);
+                //chart.series[0].setData(data_list);
+
+
+                var chart = new Highcharts.Chart({
+                    chart: {
+                        renderTo: 'container',
+                        type: 'spline',
+                        marginRight: 130,
+                        marginBottom: 25
+                    },
+                    title: {
+                        text: 'Room Temperature Statistics ',
+                        x: -20 //center
+                    },
+                    xAxis: {
+                        categories: time_label
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'Temperature (°C)'
+                        },
+                        plotLines: [{
+                            value: 0,
+                            width: 1,
+                            color: '#808080'
+                        }]
+                    },
+                    tooltip: {
+                        valueSuffix: '°C'
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'top',
+                        x: -10,
+                        y: 100,
+                        borderWidth: 0
+                    },
+                    series: [{
+                        name: 'Room',
+                        data: data_list
+                    }]
+                });
+
+            });
+        }
+
+
+        setInterval(function () {
+            autoLoadInfo();
+        }, 1000);
+
+
+        function autoLoadInfo() {
+
+            // autoLoadHighChat();
+
+
+            var request2 = $.ajax({
+                url: '/ajax/gettime',
+                type: 'GET'
+            });
+
+            request2.done(function (data) {
+                time = JSON.parse(data.content);
+                var timeS = time['time'];
+                var timeTemplate = 'Timezone: GMT+7. Current time @nowtime';
+                timeTemplate = timeTemplate.replace('@nowtime', timeS);
+
+                $('#nowtime').html(timeTemplate);
+
+                //Get second from string HH:MM:SS
+                var second = timeS.substr((timeS.length - 2), 2);
+
+                //update timer and countdown
+                if (second == '01') {
+                    //updateAllTimer();
+                }
+
+            });
+
+            //Change time and temp
+            var request = $.ajax({
+                url: 'ajax/getrealinfo',
+                type: 'GET'
+            });
+
+            request.done(function (data) {
+                var jsonData = JSON.parse(data.content);
+                var timeS = jsonData['time'];
+                var temp = jsonData['temp']
+
+                //Change time value
+                var timeTemplate = 'Timezone: GMT+7. Current time @nowtime';
+                timeTemplate = timeTemplate.replace('@nowtime', timeS);
+                //$('#nowtime').html(timeTemplate);
+
+
+                //Get second from string HH:MM:SS
+                var second = timeS.substr((timeS.length - 2), 2);
+
+                //update timer and countdown
+                if (second == '01') {
+                    updateAllTimer();
+                }
+
+                //Auto reload chart
+                if (second == '05') {
+                    autoLoadHighChat();
+                }
+
+                //Change temp value
+                changeValue('temp', temp)
+
+
+                //Change status device
+                var statusList = jsonData['dev'];
+                // console.log(statusList)
+                for (var dev in statusList) {
+
+                    var status = statusList[dev];
+                    //Have to update status of device
+                    if (document.getElementById(dev).value != status) {
+                        var sttTemplate = 'stt@dev';
+                        sttTemplate = sttTemplate.replace('@dev', dev);
+                        console.log(status);
+                        document.getElementById(dev).value = status;
+                        document.getElementById(sttTemplate).className = status;
+                    }
+                }
+
+
+            });
+
+
+            //End procss for update server's time
+
+            /*
+             //Begin process for update room temp -->
+             var requestTem = $.ajax({
+             url: 'ajax/gettem',
+             type: 'GET'
+             });
+
+             requestTem.done(function(data) {
+             //console.log(data.content)
+             obj_json = JSON.parse(data.content);
+             if(document.getElementById('temp').value != obj_json['temp']) {
+             $('#temp').html(obj_json['temp']);
+             }
+
+             });
+             //End update room temp
+
+
+
+
+             //Begin process for update all device's status
+             var requestStatusAll = $.ajax({
+             url: 'ajax/getstatusall',
+             type: 'GET'
+             });
+
+             requestStatusAll.done(function(data) {
+             jsonList = JSON.parse(data.content);
+
+             for (var dev in jsonList) {
+
+             var status = jsonList[dev];
+             //Have to update status of device
+             if (document.getElementById(dev).value != status) {
+             var sttTemplate = 'stt@dev';
+             sttTemplate = sttTemplate.replace('@dev', dev);
+             document.getElementById(dev).value = status;
+             document.getElementById(sttTemplate).className = status;
+             }
+             }
+             });
+
+             //End process for update all device's status
+             */
+        }
+
+
+    </script>
+
+    <script type="text/javascript">
+
+        jQuery(document).ready(function () {
+            autoLoadHighChat();
+        });
+
+
+    </script>
+
+
+    <script type="text/javascript" src="{% static 'viewcam/jquery/jquery1.6.2.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'viewcam/jquery/jquery-ui.min.js' %}"></script>
+
+
+    <!-- Css for calendar -->
+    <link ref="stylesheet" type="text/css" href="{% static 'viewcam/css/jquery-ui.css' %}"/>
+</head>
+
+
+<body bgcolor="#d0d0d0" style="padding: 0px;">
+<div class="container">
+    <ul class="tabs">
+        <li><a href="#tab1">Control Panel</a></li>
+        <li><a href="#tab2">Temperature</a></li>
+        <li><a href="#tab3">Camera</a></li>
+    </ul>
+    <div class="tab_container">
+
+
+        {% load staticfiles %}
+        <div id="tab1" class="tab_content" align="center">
+            <table bgcolor="#2F4F4F" id="root" border="1" align="center" width="1310px">
+                <tbody>
+                <tr>
+                    <td colspan="4" height="100"><b>
+                        <div align="center" style="font-size:25pt; color:#FFFFFF">REMOTE CONTROL WEBSERVER</div>
+                    </b></td>
+                </tr>
+                <tr align="left">
+                    <td height="25" valign="top" width="85%"><b>
+                        <div style="color:#FFFFFF">&nbsp;Devices</div>
+                    </b></td>
+                    <td height="25" valign="top" width="auto"><b>
+                        <div style="color:#FFFFFF">&nbsp;Sensors (<sup>o</sup>C)</div>
+                    </b></td>
+                </tr>
+                <tr>
+                    <td height="auto" valign="top" width="200"><p></p>
+
+                        <div>
+                            <form method="POST" action=""><font color="#FFFFFF"></font>
+                                {% include "viewcam/part/ControlTable.html" %}
+                            </form>
+                        </div>
+                    </td>
+                    <td height="auto" align="center" width="auto">
+                        <div style="font-size:50pt; color:#FFFFFF" id="temp">33.75</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" height="auto" width="auto">
+                        {% include "viewcam/part/alertTable.html" %}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" height="25" width="auto">
+                        <div align="center" style="color:#FFFFFF" id="nowtime">Timezone: GMT+7. Current time</div>
+                    </td>
+                </tr>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+            /*
+             setInterval(function () {
+             console.log('auto reload');
+             autoLoadHighChat();
+             }, 60000);
+             */
+        </script>
+
+
+        <div id="tab2" class="tab_content">
+            <div id="container" style="width: 1200px;height: 500px; margin: 0 auto; float:right;"></div>
+            <div id="interval" style="min-width: auto; height: auto; margin: 0 10px; float: left;">
+
+                <div><b>Input Interval</b></div>
+                <div id="outer">
+                    <div class="inner">
+                        <form action="">
+                            <select name="val_interval">
+                                <option value="val_int0">1</option>
+                                <option value="val_int1">5</option>
+                                <option value="val_int2">10</option>
+                                <option value="val_int2">15</option>
+                                <option value="val_int3">30</option>
+                                <option value="val_int4">60</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="inner">
+                        <form action="">
+                            <select name="val_unit">
+                                <option value="val_unit0">sec</option>
+                                <option value="val_unit1">min</option>
+                                <option value="val_unit2">Hour</option>
+                                <option value="val_unit3">Day</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="inner">
+                        <button class="msgBtnBack">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="enrollment_container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+        </div>
+
+        <div id="tab3" class="tab_content">
+            <div id="strobeMediaPlayback" style="min-width: auto; height: auto; margin: 0 auto; float: left;">
+                <p>Alternative content</p>
+            </div>
+            <div style="min-width: auto; height: auto; margin: 0 20px; float:right;">
+                <div id="outer">
+                    <div class="inner">
+                        <form action="">
+                            <select name="val_interval">
+                                <option value="val_int0">1</option>
+                                <option value="val_int1">5</option>
+                                <option value="val_int2">10</option>
+                                <option value="val_int2">15</option>
+                                <option value="val_int3">30</option>
+                                <option value="val_int4">60</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="inner">
+                        <form action="">
+                            <select name="val_unit">
+                                <option value="val_unit0">sec</option>
+                                <option value="val_unit1">min</option>
+                                <option value="val_unit2">Hour</option>
+                                <option value="val_unit3">Day</option>
+                            </select>
+                        </form>
+                    </div>
+                    <div class="inner">
+                        <button class="msgBtnBack">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+</body>
+
+</html>

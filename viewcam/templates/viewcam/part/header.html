@@ -1,0 +1,370 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Raspi Web Server</title>
+
+
+{% load staticfiles %}
+{% include "viewcam/part/resource.html" %}
+
+
+<!--script for switch between tabs -->
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(".tab_content").hide();
+        $("ul.tabs li:first").addClass("active").show();
+        $(".tab_content:first").show();
+        $("ul.tabs li").click(function () {
+            $("ul.tabs li").removeClass("active");
+            $(this).addClass("active");
+            $(".tab_content").hide();
+            var activeTab = $(this).find("a").attr("href");
+            $(activeTab).fadeIn();
+            return false;
+        })
+        ;
+    });
+
+</script>
+
+
+<!-- Define function to javascript -->
+<script type="text/javascript">
+
+    //Show warning
+    function confirmAction(msg) {
+        var retVal = confirm(msg);
+
+        if (retVal) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    //Change value of element when you know id of it
+    function changeValue(id, newvalue) {
+
+        var oldValue = document.getElementById(id).value;
+        if (oldValue == newvalue) {
+            return
+        }
+
+        var id_replace = "#@id".replace('@id', id);
+
+        $(id_replace).html(newvalue);
+
+    }
+
+    //Change action view. Such as on->ON, of->OFF
+    function changeActionView(action) {
+
+        if (action == null || action == '') {
+            return '';
+        }
+        //  console.log(action)
+        if (action == 'on') {
+            action = 'ON'
+        } else {
+            if (action == 'off') {
+                action = 'OFF'
+            }
+        }
+
+        return action;
+    }
+
+</script>
+
+
+<!--Script view videcam streaming -->
+<script type="text/javascript">
+
+    function createViewCam(hight, weight) {
+        // Create a StrobeMediaPlayback configuration
+        var parameters = {
+            src: "rtmp://" + window.location.hostname + "/flvplayback/myStream",
+            //src: "http://mediapm.edgesuite.net/strobe/content/test/AFaerysTale_sylviaApostol_640_500_short.flv",
+            autoPlay: true,
+            controlBarAutoHide: false,
+            playButtonOverlay: true,
+            showVideoInfoOverlayOnStartUp: false,
+            optimizeBuffering: false,
+            initialBufferTime: 0.1,
+            expandedBufferTime: 0.1,
+            minContinuousPlayback: 0.1,
+            poster: "{% static 'viewcam/strobe/images/poster.png' %}"
+        };
+
+        //hight = 540
+        //weight = 960
+        // Embed the player SWF:
+        swfobject.embedSWF
+        ("{% static 'viewcam/strobe/StrobeMediaPlayback.swf' %}"
+                , "strobeMediaPlayback"
+                , weight
+                , hight
+                , "10.1.0"
+                , {}
+                , parameters
+                , {allowFullScreen: "true"}
+                , {name: "strobeMediaPlayback"}
+        );
+
+    }
+
+
+</script>
+
+
+<!--Script for update device's state and timer from server -->
+<script type="text/javascript">
+
+    //Update all timer for active alertTime
+    function updateAllTimer() {
+        var request = $.ajax({
+            url: '/ajax/alarmtime/all',
+            type: 'GET'
+        });
+
+        request.done(function (data) {
+            var jsonData = JSON.parse(data.content);
+
+            if (jsonData['status']) {
+                var info = jsonData['info'];
+                //For list device
+                for (var dev in info) {
+
+                    //Get listTimer
+                    var timerList = info[dev];
+
+                    for (var timer in timerList) {
+                        //Get detail Timer
+                        var detailTimer = timerList[timer];
+                        //console.log(timer)
+
+                        //Get id html of view for device
+                        var id = '@dev_@timer_@field'.replace('@dev', dev).replace('@timer', timer);
+                        var id_action = id.replace('@field', 'action');
+                        var id_countDow = id.replace('@field', 'countdown');
+                        //console.log(id_action);
+                        //console.log(id_countDow);
+
+
+                        //Change value action and countdown
+
+                        changeValue(id_action, changeActionView(detailTimer['action']));
+                        //console.log('remain', detailTimer['remain']);
+                        //console.log('action', detailTimer['action']);
+                        changeValue(id_countDow, detailTimer['remain']);
+
+                    }
+
+                }
+            }
+
+        });
+    }
+
+
+    function autoLoadHighChat() {
+
+        // updateAllTimer();
+
+        //Begin process for update server's time
+
+        var time_label = [];
+        var data_list = [];
+
+        var val_interval = document.getElementById('val_interval').value;
+        var val_unit = document.getElementById('val_unit').value;
+        //alert(val_interval);
+        //alert(val_unit);
+
+        url_get_temp_list = '/gettemplist/@val_interval/@val_unit'.replace('@val_interval', val_interval)
+                .replace('@val_unit', val_unit);
+        //alert(url_get_temp_list);
+
+        var request2 = $.ajax({
+            url: url_get_temp_list,
+            type: 'GET'
+        });
+
+        request2.done(function (data) {
+            var jsonData = JSON.parse(data.content);
+            // console.log(jsonData);
+
+            var temp_list = jsonData['temp_list'];
+            for (var row in temp_list) {
+
+                var detail = temp_list[row];
+                // console.log(detail);
+                // console.log(detail['time']);
+                // console.log(detail['value']);
+                time_label[time_label.length] = detail['time'];
+                data_list[data_list.length] = detail['value'];
+
+            }
+
+            // console.log(data_list);
+            // console.log(time_label);
+            //chart.series[0].setData(data_list);
+
+
+            var chart = new Highcharts.Chart({
+                chart: {
+                    renderTo: 'container',
+                    type: 'spline',
+                    marginRight: 130,
+                    marginBottom: 25
+                },
+                title: {
+                    text: 'Room Temperature Statistics ',
+                    x: -20 //center
+                },
+                xAxis: {
+                    categories: time_label
+                },
+                yAxis: {
+                    title: {
+                        text: 'Temperature (°C)'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    valueSuffix: '°C'
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'right',
+                    verticalAlign: 'top',
+                    x: -10,
+                    y: 100,
+                    borderWidth: 0
+                },
+                series: [{
+                    name: 'Room',
+                    data: data_list
+                }]
+            });
+
+        });
+    }
+
+
+    setInterval(function () {
+        autoLoadInfo();
+    }, 1000);
+
+    // Update cam_status
+    setInterval(function () {
+        get_camera_status();
+    }, 5000);
+
+
+    function autoLoadInfo() {
+
+        // autoLoadHighChat();
+
+
+        var request2 = $.ajax({
+            url: '/ajax/gettime',
+            type: 'GET'
+        });
+
+        request2.done(function (data) {
+            time = JSON.parse(data.content);
+            var timeS = time['time'];
+            var timeTemplate = 'Timezone: GMT+7. Current time @nowtime';
+            timeTemplate = timeTemplate.replace('@nowtime', timeS);
+
+            $('#nowtime').html(timeTemplate);
+
+            //Get second from string HH:MM:SS
+            var second = timeS.substr((timeS.length - 2), 2);
+
+        });
+
+        //Change time and temp
+        var request = $.ajax({
+            url: 'ajax/getrealinfo',
+            type: 'GET'
+        });
+
+        request.done(function (data) {
+            var jsonData = JSON.parse(data.content);
+            var timeS = jsonData['time'];
+            var temp = jsonData['temp'];
+
+            //Change time value
+            var timeTemplate = 'Timezone: GMT+7. Current time @nowtime';
+            timeTemplate = timeTemplate.replace('@nowtime', timeS);
+            //$('#nowtime').html(timeTemplate);
+
+
+            //Get second from string HH:MM:SS
+            var second = timeS.substr((timeS.length - 2), 2);
+
+            //update timer and countdown
+            if (second == '01' || second == '02' || second == '03') {
+                updateAllTimer();
+            }
+
+            //Auto reload chart
+            if (second == '05') {
+                autoLoadHighChat();
+            }
+
+            //Change temp value
+            changeValue('temp', temp);
+
+
+            //Change status device
+            var statusList = jsonData['dev'];
+            // console.log(statusList)
+            for (var dev in statusList) {
+
+                var status = statusList[dev];
+                //Have to update status of device
+                if (document.getElementById(dev).className != status) {
+                    var sttTemplate = 'stt@dev';
+                    sttTemplate = sttTemplate.replace('@dev', dev);
+
+                    document.getElementById(sttTemplate).className = status;
+
+                    if (status == 'ON')
+                        status = 'OFF';
+                    else
+                        status = 'ON';
+
+                    console.log(status);
+                    document.getElementById(dev).value = status;
+
+                }
+            }
+
+        });
+    }
+
+
+</script>
+
+<script type="text/javascript">
+
+    //Update first time for the first load page
+    jQuery(document).ready(function () {
+
+        //Get time, device status
+        autoLoadInfo();
+        get_camera_status();
+        createViewCam(540, 960);
+        //Update infor for alarm by time and alarm by temp
+        ///updateAllTimer();
+        autoLoadHighChat();
+    });
+
+
+</script>

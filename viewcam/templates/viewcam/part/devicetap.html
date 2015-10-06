@@ -1,0 +1,31 @@
+{% load staticfiles %}
+<div id="tab1" class="tab_content" align="center">
+				<table bgcolor="#2F4F4F" id="root" border="1" align="center" width="1310px">
+				<tbody>
+				<tr><td colspan="4" height="100"><b><div align="center" style="font-size:25pt; color:#FFFFFF">REMOTE CONTROL WEBSERVER</div></b></td></tr>
+				<tr align="left">
+					<td height="25" valign="top" width="85%"><b><div style="color:#FFFFFF">&nbsp;Devices</div></b></td>
+					<td height="25" valign="top" width="auto"><b><div style="color:#FFFFFF">&nbsp;Sensors (<sup>o</sup>C)</div></b></td>
+				</tr>
+				<tr>
+					<td height="auto" valign="top" width="200"><p></p>
+					<div style="margin-top:10px">
+						<form method="POST" action=""><font color="#FFFFFF"></font>
+                            {% include "viewcam/part/ControlTable.html" %}
+				        </form>
+				</div>
+				</td>
+				<td height="auto" align="center" width="auto"><div style="font-size:50pt; color:#FFFFFF" id="temp">33.75</div></td>
+				</tr>
+				<tr>
+					<td colspan="4" height="auto" width="auto">
+					        {%  include "viewcam/part/alertTable.html" %}
+					</td>
+				</tr>
+				<tr>
+					<td colspan="4" height="25" width="auto"><div align="center" style="color:#FFFFFF" id="nowtime">Timezone: GMT+7. Current time </div></td>
+				</tr>
+				</tr>
+				</tbody>
+				</table>
+</div>

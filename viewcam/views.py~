@@ -1,0 +1,34 @@
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template import RequestContext, loader
+from django.http import Http404
+import os
+
+
+def index(request):
+	#result_list = Qos.objects.all()
+	#template = loader.get_template('viewqos/index.html')
+	#context = RequestContext(request, {
+     #   	'qos_list': result_list,
+    #	})
+    #
+	#return HttpResponse(template.render(context))
+    #command = "ssh -l -v root@192.168.1.135 '/var/www/qosmanage/command.sh 10'"
+  #  p = os.system(command)
+    #f = os.popen(command)
+    #result = f.read()
+
+
+    return render(request, 'viewqos/index.html', None)
+
+def detail(request, qos_id):
+    	try:
+        	#result = InBoundQos.objects.get(pk=qos_id)
+		pass
+    	except InBoundQos.DoesNotExist:
+        	raise Http404
+    	return render(request, 'viewqos/detail.html', {'qos': None})
+
+
+
+# Create your views here.
